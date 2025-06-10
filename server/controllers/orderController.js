@@ -63,12 +63,14 @@ export const placeOrderStripe=async(req,res)=>{
             paymentType:"Online",
         });
 
+        
         // stripe getway initialize
         const stripeInstance= new stripe(process.env.STRIPE_Secret_key);
 
         // Create line items for stripe
-            const line_items = productData.map((item) => ({
-                price_data: {
+            const line_items = productData.map((item) => {
+                return{
+                    price_data: {
                     currency: "usd",
                     product_data: {
                     name: item.name,
@@ -76,7 +78,8 @@ export const placeOrderStripe=async(req,res)=>{
                     unit_amount: Math.floor(item.price * 1.02 * 100), // apply tax + convert to cents
                 },
                 quantity: item.quantity,
-                }));
+                }
+            })
 
 
         // create session
@@ -90,6 +93,8 @@ export const placeOrderStripe=async(req,res)=>{
                 userId,
             }
         })
+
+       
 
         return res.json({success:true , url:session.url});
     } catch (error) {
@@ -137,7 +142,7 @@ export const stripeWebhook=async(request ,response)=>{
              break;
         }
 
-          case "payment_intent.succeeded":{
+          case "payment_intent.payment.failed":{
 
                 const paymentIntent=event.data.object;
             const paymentIntentId=paymentIntent.id;
@@ -161,6 +166,8 @@ export const stripeWebhook=async(request ,response)=>{
     }
     response.json({received:true})
 }
+
+
 
 // Get Oders by UserId:/api/order/user
 export const getUserOrders=async (req,res)=>{
